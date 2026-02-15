@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const STATUS_ENDPOINT = '/weather/status';
     const POLL_INTERVAL = 60000; // 60 seconds
+    const FETCH_TIMEOUT_MS = 12000;
 
     const ui = {
         card: document.getElementById('status-card'),
@@ -39,11 +40,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    function toPlainMessage(message) {
+        let text = String(message || '');
+        text = text.split('<br />').join('\n');
+        text = text.split('<br/>').join('\n');
+        text = text.split('<br>').join('\n');
+        return text;
+    }
+
+    async function fetchWithTimeout(url, timeoutMs) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+            return await fetch(url, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timer);
+        }
+    }
+
     async function updateWeather() {
         try {
             // Add loading pulse if needed, or subtle indication
             
-            const response = await fetch(STATUS_ENDPOINT);
+            const response = await fetchWithTimeout(STATUS_ENDPOINT, FETCH_TIMEOUT_MS);
             if (!response.ok) throw new Error('Network response was not ok');
             
             const data = await response.json();
@@ -54,7 +76,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ui.text.className = `font-black tracking-wider ${config.colorClass} transition-colors duration-500`;
             
             // 2. Update Message
-            ui.message.innerHTML = data.message;
+            ui.message.classList.add('whitespace-pre-line');
+            ui.message.textContent = toPlainMessage(data.message);
             
             // 3. Update Metrics
             const details = data.details || {};
