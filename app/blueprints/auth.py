@@ -110,6 +110,12 @@ def send_verification_email(user):
     except Exception:
         current_app.logger.exception('Failed to send verification email.')
         flash('Error sending verification email. Please try again later.', 'error')
+        user.otp_code = None
+        user.otp_expiry = None
+        db.session.commit()
+        clear_otp_state()
+        return False
+    return True
 
 
 def send_password_reset_email(user):
@@ -134,6 +140,12 @@ def send_password_reset_email(user):
     except Exception:
         current_app.logger.exception('Failed to send password reset email.')
         flash('Error sending email. Please try again later.', 'error')
+        user.otp_code = None
+        user.otp_expiry = None
+        db.session.commit()
+        clear_otp_state()
+        return False
+    return True
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
@@ -177,9 +189,8 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        send_verification_email(user)
-
-        flash('Account created! Please enter the verification code sent to your email.', 'success')
+        if send_verification_email(user):
+            flash('Account created! Please enter the verification code sent to your email.', 'success')
         login_user(user)
         return redirect(url_for('auth.verify_otp'))
 
@@ -193,7 +204,8 @@ def reset_request():
         user = User.query.filter_by(email=email).first() if is_valid_email(email) else None
 
         if user:
-            send_password_reset_email(user)
+            if not send_password_reset_email(user):
+                return render_template('auth/reset_request.html', email_value=email)
         else:
             set_otp_state('reset', email, None)
 
@@ -399,9 +411,9 @@ def resend_confirmation():
                 )
                 return redirect(url_for('auth.verify_otp'))
 
-    send_verification_email(current_user)
-    session['otp_last_sent_at'] = now_utc().isoformat()
-    flash('A new verification code has been sent to your email.', 'success')
+    if send_verification_email(current_user):
+        session['otp_last_sent_at'] = now_utc().isoformat()
+        flash('A new verification code has been sent to your email.', 'success')
     return redirect(url_for('auth.verify_otp'))
 
 

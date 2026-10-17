@@ -16,6 +16,17 @@ Required:
 - `DATABASE_URL`
 - `CRON_SECRET`
 
+Required for registration and password-reset emails (these must be copied
+explicitly when moving from Cloud Run or another host):
+- `MAIL_SERVER`
+- `MAIL_PORT=587`
+- `MAIL_USE_TLS=true`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD` (store as a Secret; use the sender's SMTP app password)
+
+Redeploy after changing production environment variables. Verify delivery to
+the intended recipient; a rendered confirmation page does not prove delivery.
+
 Recommended for Vercel:
 - `LIGHTNING_COLLECTOR_ENABLED=false`
 - `USE_SAMPLE_WEATHER_DATA=false`

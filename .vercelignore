@@ -12,3 +12,4 @@ chatbot_evaluation*.json
 chatbot_fix*.json
 chatbot_*report.md
 remote_main*.json
+开发错误日志.md

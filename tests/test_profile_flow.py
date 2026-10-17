@@ -1,12 +1,15 @@
 import pytest
 from app import create_app, db
 from app.models.user import User
+from app.extensions import mail
 import io
 
 @pytest.fixture
 def app():
     app = create_app('testing')
     app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for easier testing
+    app.config['MAIL_USERNAME'] = 'sender@example.invalid'
+    app.config['MAIL_SUPPRESS_SEND'] = True
     
     with app.app_context():
         db.create_all()
@@ -61,7 +64,10 @@ def test_password_reset_flow(client, app):
         db.session.commit()
 
     # 2. Request Password Reset
-    response = client.post('/auth/password/reset-request', data={'email': 'reset@example.com'}, follow_redirects=True)
+    with mail.record_messages() as outbox:
+        response = client.post('/auth/password/reset-request', data={'email': 'reset@example.com'}, follow_redirects=True)
+    assert len(outbox) == 1
+    assert outbox[0].recipients == ['reset@example.com']
     assert response.status_code == 200
     assert b'verification code has been sent' in response.data
 
@@ -70,6 +76,7 @@ def test_password_reset_flow(client, app):
         user = User.query.filter_by(email='reset@example.com').first()
         otp = user.otp_code
         assert otp is not None
+        assert otp in outbox[0].body
 
     # 4. Reset Password
     response = client.post('/auth/password/reset', data={
