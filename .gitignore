@@ -46,3 +46,9 @@ node_modules/
 .playwright-cli/
 
 .vercel
+
+# Local runtime databases must never be published.
+instance/
+*.db
+*.sqlite
+*.sqlite3

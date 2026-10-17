@@ -10,8 +10,8 @@ name: Collect Lightning Snapshots
 #   CRON_SECRET         same value as the Vercel CRON_SECRET env var
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
+  # Production collection is scheduled every two minutes by cron-job.org.
+  # Keep this workflow manual to avoid a second scheduler after migration.
   workflow_dispatch:
 
 jobs:

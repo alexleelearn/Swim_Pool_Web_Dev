@@ -217,25 +217,24 @@ Common commands:
 - `dev.bat git-push "chore(repo): your message"`
 
 
-## Scheduled Workflows (GitHub Actions)
+## Scheduled Background Jobs
 
-Two workflows drive background activity. Both call authenticated cron
-endpoints with `Authorization: Bearer $CRON_SECRET`:
+Production scheduling is managed in cron-job.org independently of GitHub:
 
-| Workflow | Schedule (UTC) | Endpoint | Secrets |
-| :--- | :--- | :--- | :--- |
-| `community-bot-posts.yml` | `*/30 23 * * *` + `*/30 0-13 * * *` (SGT operating hours only) | `/api/cron/community-posts` | `COMMUNITY_BOT_CRON_URL`, `CRON_SECRET` |
-| `collect-lightning.yml` | `*/10 * * * *` | `/api/cron/collect-lightning` | `LIGHTNING_CRON_URL`, `CRON_SECRET` |
+| Job | Schedule (UTC+8) | Endpoint |
+| :--- | :--- | :--- |
+| NTU Pool Community Bot | Every 30 minutes, 07:00–21:30 | `/api/cron/community-posts` |
+| Lightning collection | Every 2 minutes | `/api/cron/collect-lightning` |
+
+Both endpoints require `CRON_SECRET`. The GitHub workflows are retained for
+manual dispatch only, using their documented repository secrets if needed.
 
 Notes:
 - The community bot scheduler is additionally gated in the app: outside the
   buffered SGT operating window every tick is a no-op, and daily targets are
   spread randomly across the open window.
-- `collect-lightning.yml` exists because the in-process collector thread does
-  not survive on Vercel serverless; without it the 12-hour lightning chart
-  develops gaps whenever nobody is browsing.
-- GitHub disables scheduled workflows after ~60 days without repo activity;
-  re-enable them from the Actions tab if pushes have been quiet.
+- The external collector keeps the 12-hour chart populated while Vercel
+  instances are idle. Do not also enable a GitHub schedule for the same task.
 
 ## Weather Engine Runtime Flags
 
