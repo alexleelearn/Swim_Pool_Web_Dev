@@ -27,6 +27,10 @@ def create_app(config_name=None):
     # Harden DB behavior in production-like postgres deployments:
     # avoid long hangs on connection/session issues.
     db_uri = app.config.get('SQLALCHEMY_DATABASE_URI') or ''
+    # Keep the driver aligned with the psycopg2-binary dependency.
+    if db_uri.startswith('postgresql://'):
+        db_uri = db_uri.replace('postgresql://', 'postgresql+psycopg2://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
     if db_uri.startswith('postgresql'):
         engine_options = dict(app.config.get('SQLALCHEMY_ENGINE_OPTIONS') or {})
         engine_options.setdefault('pool_pre_ping', True)
