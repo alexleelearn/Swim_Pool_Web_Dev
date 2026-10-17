@@ -12,8 +12,13 @@
         </div>
         <h2 class="text-2xl font-bold text-slate-800">Verify your Account</h2>
         <p class="text-gray-500 text-sm mt-2">
+            {% if session.get('otp_flow') == 'verify' and current_user.otp_code %}
             We've sent a 6-digit code to <strong>{{ current_user.email }}</strong>. <br>
             Please enter it below to verify your email.
+            {% else %}
+            Request a verification code for <strong>{{ current_user.email }}</strong>
+            using Resend Code below.
+            {% endif %}
         </p>
     </div>
 

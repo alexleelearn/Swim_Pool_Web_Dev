@@ -123,6 +123,8 @@ def test_registration_mail_failure_does_not_claim_delivery(client, app, mocker):
 
     assert b'Error sending verification email.' in response.data
     assert b'Account created! Please enter the verification code sent' not in response.data
+    assert b"We've sent a 6-digit code" not in response.data
+    assert b'Request a verification code for' in response.data
     with app.app_context():
         user = User.query.filter_by(email='signup@example.com').one()
         assert not user.is_verified
@@ -142,6 +144,7 @@ def test_resend_mail_failure_does_not_start_success_cooldown(client, app, mocker
 
     assert b'Error sending verification email.' in response.data
     assert b'A new verification code has been sent' not in response.data
+    assert b"We've sent a 6-digit code" not in response.data
     with client.session_transaction() as session:
         assert 'otp_last_sent_at' not in session
 
