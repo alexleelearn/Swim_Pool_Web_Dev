@@ -120,6 +120,19 @@ Create a cron-job.org job:
 The endpoint returns a short JSON response so it stays within cron-job.org's
 30-second execution limit.
 
+### Community bot schedule
+
+The `NTU Pool Community Bot` job (cron-job.org job `8663575`) calls
+`https://www.ntupool.org/api/cron/community-posts` every 30 minutes from
+07:00 through 21:30, UTC+8 (`*/30 7-21 * * *`, Asia/Shanghai).
+The app still applies its operating-hours buffer and daily action limits.
+Use the `Authorization: Bearer <CRON_SECRET>` request header, a 30-second
+timeout, and saved responses for verification. Do not put the secret in the URL.
+
+This replaces the GitHub Actions schedule; the repository workflow is now
+manual-only. After restoring GitHub repository access, sync this workflow
+change before re-enabling Actions to avoid running two schedules.
+
 ## 5. Runtime Model
 
 Vercel functions are started on demand and may be frozen after a request, so

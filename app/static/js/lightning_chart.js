@@ -115,6 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
         button.classList.toggle('text-white', isActive);
         button.classList.toggle('bg-white', !isActive);
         button.classList.toggle('text-slate-700', !isActive);
+        button.classList.toggle('hover:bg-slate-100', !isActive);
+        button.classList.toggle('hover:bg-blue-800', isActive);
     }
 
     function refreshFilterStyles() {
@@ -175,17 +177,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return gradient;
     }
 
-    function getXAxisTickStep(labelCount) {
+    function getXAxisTickStep(labelCount, availableWidth) {
         const safeCount = Number(labelCount) || 0;
-        const maxVisible = state.window === '12h' ? 8 : 10;
+        const labelWidth = state.window === '12h' ? 110 : 64;
+        const maxVisible = Math.max(2, Math.min(
+            state.window === '12h' ? 8 : 10,
+            Math.floor(availableWidth / labelWidth)
+        ));
         if (safeCount <= maxVisible) {
             return 1;
         }
-        return Math.max(1, Math.ceil((safeCount - 1) / maxVisible));
+        return Math.max(1, Math.ceil((safeCount - 1) / (maxVisible - 1)));
     }
 
     function isXAxisTickTooCloseToEnd(index, lastIndex, tickStep) {
-        if (state.window !== '12h' || tickStep <= 1 || index === lastIndex) {
+        if (tickStep <= 1 || index === lastIndex) {
             return false;
         }
 
@@ -267,7 +273,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const labels = Array.isArray(windowData.labels) ? windowData.labels : [];
         const rawSeries = getActiveSeries(windowData);
         const colorConfig = getColorConfig();
-        const xTickStep = getXAxisTickStep(labels.length);
         const yAxisMax = getYAxisMax(rawSeries);
         const showZeroLightningMessage = hasZeroLightningData(labels, rawSeries);
 
@@ -347,6 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             maxRotation: 0,
                             autoSkip: false,
                             callback(value, index, ticks) {
+                                const xTickStep = getXAxisTickStep(
+                                    ticks.length, this.width || ui.canvas.clientWidth || 640
+                                );
                                 const lastIndex = ticks.length - 1;
                                 if (isXAxisTickTooCloseToEnd(index, lastIndex, xTickStep)) {
                                     return '';

@@ -191,6 +191,29 @@ test('low non-zero lightning counts use a 0-10 y-axis range', async () => {
     assert.equal(chart.options.scales.y.max, 10);
 });
 
+test('mobile time labels stay spaced and expand after resizing', async () => {
+    for (const windowName of ['1h', '12h']) {
+        const labels = Array.from({ length: 61 }, (_value, index) => `tick-${index}`);
+        const payload = buildPayload({ labels, counts: labels.map(() => 0) });
+        payload.charts['1h'] = { ...payload.charts['12h'], display_label: 'Last 1 Hour' };
+        const harness = createLightningChartHarness(payload);
+        await harness.boot();
+        await harness.selectWindow(windowName);
+        const callback = harness.FakeChart.instances[0].options.scales.x.ticks.callback;
+        const ticks = labels.map((_label, value) => ({ value }));
+        const visibleAt = (width) => labels.filter((_label, index) => callback.call({
+            width,
+            getLabelForValue: (value) => labels[value],
+        }, index, index, ticks));
+
+        const mobile = visibleAt(200);
+        assert.ok(mobile.length <= 3);
+        assert.equal(mobile[0], 'tick-0');
+        assert.equal(mobile.at(-1), 'tick-60');
+        assert.ok(visibleAt(640).length > mobile.length);
+    }
+});
+
 test('zero lightning data shows an explicit no-lightning chart message', async () => {
     const labels = Array.from({ length: 61 }, (_value, index) => `tick-${index}`);
     const harness = createLightningChartHarness(buildPayload({
