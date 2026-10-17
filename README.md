@@ -110,7 +110,7 @@ Optional system tools (not Python packages, validated by `dev.bat doctor`):
 
 1. Clone the repository
 ```bash
-git clone https://github.com/YourUsername/Swim_Pool_Web_Dev.git
+git clone https://github.com/alexleelearn/Swim_Pool_Web_Dev.git
 cd Swim_Pool_Web_Dev
 ```
 
